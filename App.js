@@ -8,7 +8,7 @@ export default class App extends Component {
   render() {
     return (
       <View style={styles.container}>
-        <StackedBoxes />
+        <StackedBoxes perspective={200} numBoxes={6} />
       </View>
     );
   }

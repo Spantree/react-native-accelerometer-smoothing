@@ -2,29 +2,46 @@ import React, { Component } from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
 import { Accelerometer } from 'expo';
 
-/* This changes the impact of the acceleromter data. Bigger number -> bigger change */
-const PERSPECTIVE = 200;
-
 /* If you want more or less boxes, modify this list of colors. */
 const BOX_COLORS = [
-  '#056ECF',
-  '#3581c7',
-  '#3f8bd2',
-  '#649bce',
-  '#8aaed0',
   '#b1c1d0',
+  '#8aaed0',
+  '#649bce',
+  '#3f8bd2',
+  '#3581c7',
+  '#056ECF',
 ];
 
 export default class StackedBoxes extends Component {
   state = {
-    positions: BOX_COLORS.map(() => new Animated.ValueXY()),
+    boxes: [],
+    generatedBoxes: 0,
   };
 
-  componentWillReceiveProps(props) {
+  generateBoxes(numBoxes) {
+    let boxes = [];
+    for(var i = 0; i <  numBoxes; i++) {
+      boxes.push({position: new Animated.ValueXY()})
+    }
+    return boxes;
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if(this.state.boxes.length !== nextProps.numBoxes) {
+      this._unsubscribeFromAccelerometer();
+
+      this.setState({boxes: this.generateBoxes(nextProps.numBoxes)});
+
+      this._subscribeToAccelerometer();
+    }
   }
 
   componentWillUnmount() {
     this._unsubscribeFromAccelerometer();
+  }
+
+  componentWillMount() {
+    this.setState({boxes: this.generateBoxes(this.props.numBoxes)});
   }
 
   componentDidMount() {
@@ -34,11 +51,11 @@ export default class StackedBoxes extends Component {
   _subscribeToAccelerometer = () => {
     this._acceleroMeterSubscription = Accelerometer.addListener(
       ({x, y}) => {
-        this.state.positions.forEach((pos, idx) => {
-          Animated.spring(this.state.positions[idx], {
+        this.state.boxes.forEach((box, idx) => {
+          Animated.spring(this.state.boxes[idx].position, {
             toValue: {
-              x: x.toFixed(1) * PERSPECTIVE * (idx + 1) / 6,
-              y: -y.toFixed(1) * PERSPECTIVE * (idx + 1) / 6,
+              x: x.toFixed(1) * this.props.perspective * (idx + 1) / this.state.boxes.length,
+              y: -y.toFixed(1) * this.props.perspective * (idx + 1) / this.state.boxes.length,
             },
             friction: 7,
           }).start();
@@ -55,18 +72,18 @@ export default class StackedBoxes extends Component {
   render() {
     return (
       <View style={styles.container}>
-        {this.state.positions.map((val, idx) => {
+        {this.state.boxes.map((val, idx) => {
           return (
             <Animated.View
               key={idx}
               style={[
                 styles.defaultBox,
                 {
-                  backgroundColor: BOX_COLORS[BOX_COLORS.length - 1 - idx],
-                  opacity: (idx + 1) / BOX_COLORS.length,
+                  backgroundColor: BOX_COLORS[idx],
+                  // opacity: (idx + 1) / BOX_COLORS.length,
                   transform: [
-                    { translateX: this.state.positions[idx].x },
-                    { translateY: this.state.positions[idx].y },
+                    { translateX: this.state.boxes[idx].position.x },
+                    { translateY: this.state.boxes[idx].position.y },
                   ],
                 },
               ]}
