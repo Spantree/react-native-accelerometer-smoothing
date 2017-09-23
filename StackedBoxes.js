@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
+import PropTypes from 'prop-types';
 import { Accelerometer } from 'expo';
+
 
 /* If you want more or less boxes, modify this list of colors. */
 const BOX_COLORS = [
@@ -15,7 +17,6 @@ const BOX_COLORS = [
 export default class StackedBoxes extends Component {
   state = {
     boxes: [],
-    generatedBoxes: 0,
   };
 
   generateBoxes(numBoxes) {
@@ -92,6 +93,17 @@ export default class StackedBoxes extends Component {
         })}
       </View>
     )
+  }
+}
+
+StackedBoxes.propTypes = {
+  perspective: PropTypes.number.isRequired,
+  numBoxes: function(props, propName, componentName) {
+    if (props[propName] < 1 || props[propName] > 6) {
+      return new Error(
+        `Invalid prop \`${propName}\` supplied to \`${componentName}\`. You must draw between 1 and 6 boxes.`
+      );
+    }
   }
 }
 
